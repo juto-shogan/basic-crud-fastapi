@@ -3,24 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from datetime import date
-from pydantic import BaseModel
 from aw_api.database import get_db
+from aw_api.schemas.employees import Employee, DepartmentEmployee
 
 router = APIRouter()
-
-
-class Employee(BaseModel):
-    businessentityid: int
-    jobtitle: str
-    gender: str
-    hiredate: date
-
-
-class DepartmentEmployee(BaseModel):
-    name: str
-    jobtitle: str
-    hiredate: date
 
 
 @router.get("/employee/{id}", response_model=Employee)

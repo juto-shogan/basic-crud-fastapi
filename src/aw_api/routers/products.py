@@ -4,29 +4,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from aw_api.database import get_db
-from pydantic import BaseModel, Field
-from datetime import date
+from aw_api.schemas.products import Products, ProductCategory, ProductSubcategory
 
-router = APIRouter()
+router = APIRouter() 
 
-class ProductCategory(BaseModel):
-    name: str
 
-class ProductSubcategory(BaseModel):
-    productsubcategoryid: int
-    productcategoryid: int
-    name: str
-
-class Products(BaseModel):
-    productid: int
-    name: str
-    color: str | None = None
-    weight: int | None = None
-    product_class: str | None = Field(alias='class')
-    discontinueddate: date | None = None
-    
-    
-    
 @router.get("/products", response_model=list[Products])
 def get_products(
     limit: int = Query(default=10, ge=1, le=100),
@@ -47,6 +29,7 @@ def get_products(
 
     return search.mappings().all()
 
+
 @router.get("/products/{id}", response_model=list[Products])
 def get_specific_product(id: int, db: Session = Depends(get_db)):
     info = db.execute(
@@ -58,7 +41,6 @@ def get_specific_product(id: int, db: Session = Depends(get_db)):
         {"productid": id}
     )
     return info.mappings().all()
-
 
 
 @router.get("/categories", response_model=list[ProductCategory])
@@ -114,6 +96,7 @@ def get_subcategories(id: int, db: Session = Depends(get_db)):
     )
 
     return info.mappings().all()
+
 
 @router.get("/category/{id}/subcategory-detailed")
 def get_specific_subcategory(id: int, db: Session = Depends(get_db)):

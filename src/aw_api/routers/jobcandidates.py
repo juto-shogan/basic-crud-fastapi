@@ -3,30 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from typing import Optional
-from pydantic import BaseModel, field_validator
-import xml.etree.ElementTree as ET
 from aw_api.database import get_db
-
+from aw_api.schemas.jobcandidates import JobCandidateCreate, JobCandidateUpdate
 router = APIRouter()
 
-class JobCandidateCreate(BaseModel):
-    businessentityid: int
-    resume: str
-    
-    # validating that the variable actually comes as a valid xml
-    @field_validator("resume")
-    @classmethod
-    def resume_must_be_valid_xml(cls, value: str) -> str:
-        try:
-            ET.fromstring(value)
-        except ET.ParseError:
-            raise ValueError("resume must be valid XML")
-        return value
-    
-class JobCandidateUpdate(BaseModel):
-    resume: Optional[str] = None
-    
 
 @router.post("/jobcandidates")
 def create_job_candidate(candidate: JobCandidateCreate, db: Session= Depends(get_db)):
