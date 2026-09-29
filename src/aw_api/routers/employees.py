@@ -31,7 +31,7 @@ def get_employees(id: int, db: Session = Depends(get_db)):
     )
     info = result.mappings().first()
     if info is None:
-        raise HTTPException(status_code=404, detail="ID doesn't exist, please check the ID")
+        raise HTTPException(status_code=404, detail="ID doesn't exist, please check the ID.")
     return info
 
 
