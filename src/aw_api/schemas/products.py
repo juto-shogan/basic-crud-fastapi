@@ -22,6 +22,3 @@ class ProductSubcategoryDetailed(BaseModel):
     productsubcategoryid: int
     category_name: str
     subcategory_name: str
-    
-class Catergory(BaseModel):
-    name: str
