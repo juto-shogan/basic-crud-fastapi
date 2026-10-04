@@ -5,33 +5,26 @@ from sqlalchemy import text
 
 from aw_api.database import get_db
 from aw_api.schemas.jobcandidates import JobCandidateCreate, JobCandidateUpdate
+from aw_api.repositories import jobcandidate as job_repo
+
 router = APIRouter()
 
 
 @router.post("/jobcandidates")
-def create_job_candidate(candidate: JobCandidateCreate, db: Session= Depends(get_db)):
-    post = db.execute(
-        text(
-            """
-            INSERT INTO humanresources.jobcandidate (businessentityid, resume)
-            VALUES(:businessentityid, :resume)
-            """
-        ),
-        {"businessentityid": candidate.businessentityid,
-         "resume": candidate.resume} 
+def create_job_candidates(candidate: JobCandidateCreate, db: Session= Depends(get_db)):
+    job_repo.create_job_candidates(
+        db,
+        candidate.businessentityid,
+        candidate.resume
     )
-    db.commit()
     return {"message": "Job candidate created successfully"}
 
 
 @router.delete("/jobcandidates/{id}")
 def delete_job_candidate(id: int, db: Session = Depends(get_db)):
-    deleting = db.execute(
-        text("DELETE FROM humanresources.jobcandidate WHERE jobcandidateid = :jobcandidateid"),
-        {"jobcandidateid": id}
-    )
-    #Attribute "rowcount" is unknown
-    if deleting.rowcount == 0: # type: ignore
+    
+    deleting = job_repo.delete_job_candidate(db, id)
+    if not deleting:
         raise HTTPException(status_code=404, detail="missing ID")
     else:
         db.commit()
@@ -41,17 +34,10 @@ def delete_job_candidate(id: int, db: Session = Depends(get_db)):
 @router.patch("/jobcandidates/{id}")
 def update_job_candidate(id: int, candidate: JobCandidateUpdate, db: Session = Depends(get_db)):
     
-    if candidate.resume is not None:
-        patching = db.execute(
-            text("UPDATE humanresources.jobcandidate SET resume = :resume WHERE jobcandidateid = :jobcandidateid"),
-            {"jobcandidateid": id, "resume": candidate.resume}
-        )
-        
-        if patching.rowcount == 0: # type: ignore
-            raise HTTPException(status_code=404, detail="missing ID")
-        
-        db.commit()
-        return {"message": "job candidate updated successfully"}
-    
-    else:
+    outcome = job_repo.update_job_candidate_by_id(db, id, candidate.resume)
+    if outcome == "no_update":
         return {"message": "nothing to update"}
+    
+    if outcome == "not_found":
+        raise HTTPException(status_code=404, detail="missing ID")
+    return {"message": "job candidate updated successfully"}
