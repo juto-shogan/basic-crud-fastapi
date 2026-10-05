@@ -48,7 +48,10 @@ def get_specific_category(id: int, db: Session = Depends(get_db)):
 
 @router.get("/category/{id}/subcategory", response_model=list[ProductSubcategory])
 def get_subcategories(id: int, db: Session = Depends(get_db)):
-    return product_repo.get_subcategories_by_id(db, id)
+    subcategories = product_repo.get_subcategories_by_id(db, id)
+    if subcategories is None:
+        raise HTTPException(status_code=404, detail="Prudct category not found")
+    return subcategories
 
 
 @router.get("/category/{id}/subcategory-detailed", response_model=list[ProductSubcategoryDetailed])
