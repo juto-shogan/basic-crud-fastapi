@@ -66,7 +66,7 @@ def update_job_candidate_by_id(db: Session, id: int, resume: str | None):
     #     }
     # )
     
-    if resume is not None:
+    if resume is None:
         return "no_update"
     
     stmt = update(JobCandidate).where(JobCandidate.jobcandidateid == id).values(resume = resume)
