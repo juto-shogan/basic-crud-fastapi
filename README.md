@@ -1,90 +1,80 @@
+# aw-api
 
-# Basic CRUD API with FastAPI
+A REST API built with **FastAPI**, **SQLAlchemy**, and **PostgreSQL**, built as a hands-on learning project on top of the AdventureWorks sample database.
 
-A simple REST API built with **FastAPI**, **SQLAlchemy**, and **PostgreSQL**, demonstrating basic CRUD operations and a structured application architecture.
+This project started as a way to practice SQL against the AdventureWorks `humanresources` and `production` schemas, then grew into a full FastAPI learning exercise covering routing, request validation, pagination, and the move from raw SQL to a proper SQLAlchemy ORM layer.
 
-## Tech Stack
+## Tech stack
 
-* Python 3.13+
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-* Pydantic
-* uv
+- **FastAPI** — web framework
+- **SQLAlchemy** (Core + ORM) — database access
+- **PostgreSQL** — database (AdventureWorks sample dataset)
+- **Pydantic** — request/response validation and shaping
+- **uv** — Python package and project management
 
-## Project Structure
+## Project structure
 
-```text
-src/
-└── aw_api/
-    ├── models/
-    ├── repositories/
-    ├── routers/
-    ├── schemas/
-    ├── database.py
-    └── main.py
+```
+src/aw_api/
+├── main.py              # app entrypoint, mounts routers
+├── database.py           # engine, session, get_db dependency
+├── routers/               # route handlers, one file per resource
+├── repositories/          # database queries, one file per resource
+├── models/                # SQLAlchemy ORM models
+└── schemas/                # Pydantic request/response models
 ```
 
-## Setup
+The project follows a layered pattern: **router → repository → ORM model → database**. Routers handle HTTP concerns (status codes, request/response shape) and never touch SQL directly; repositories own all database queries and return plain data or `None`/booleans; routers interpret that data into the right HTTP response.
 
-### 1. Clone the repository
+## Endpoints
 
-```bash
-git clone https://github.com/juto-shogan/basic-crud-fastapi.git
-cd basic-crud-fastapi
-```
+### Employees (`humanresources` schema)
 
-### 2. Install uv
+| Method | Path | Description |
+|---|---|---|
+| GET | `/employee/{id}` | Get a single employee by ID |
+| GET | `/departments/{id}/employees` | Get all current employees in a department |
 
-If you do not already have `uv` installed, follow the official installation guide:
+### Job Candidates (`humanresources` schema)
 
-```bash
-uv --version
-```
+| Method | Path | Description |
+|---|---|---|
+| POST | `/jobcandidates` | Create a new job candidate (resume validated as XML) |
+| DELETE | `/jobcandidates/{id}` | Delete a job candidate by ID |
+| PATCH | `/jobcandidates/{id}` | Partially update a job candidate's resume |
 
-### 3. Install dependencies
+### Products (`production` schema)
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/products` | List products (paginated with `limit`/`offset`) |
+| GET | `/products/{id}` | Get a single product by ID |
+| GET | `/categories` | List all product categories |
+| GET | `/category/{id}` | Get a single product category |
+| GET | `/category/{id}/subcategory` | List subcategories under a category |
+| GET | `/category/{id}/subcategory-detailed` | List subcategories with their parent category's name included |
+
+## Running locally
 
 ```bash
 uv sync
-```
-
-This creates the project environment and installs the dependencies defined in `pyproject.toml`. The included `uv.lock` file ensures reproducible dependency versions.
-
-### 4. Configure environment variables
-
-Create a `.env` file in the project root and add your PostgreSQL connection details:
-
-```env
-DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-```
-
-### 5. Run the API
-
-```bash
 uv run fastapi dev src/aw_api/main.py
 ```
 
-The API will be available at:
+Create a `.env` file in the project root with:
 
-```text
-http://127.0.0.1:8000
+```
+DATABASE_URL=postgresql+psycopg2://<username>:<password>@localhost:5432/<database_name>
 ```
 
-Interactive API documentation is available at:
+Interactive API docs are available at `/docs` once the server is running.
 
-* `/docs` — Swagger UI
-* `/redoc` — ReDoc
+## What this project covers
 
-## Features
-
-* RESTful API endpoints
-* CRUD operations
-* PostgreSQL database integration
-* SQLAlchemy database sessions
-* Pydantic request and response validation
-* Modular router and repository structure
-* Interactive API documentation
-
-## Purpose
-
-This project was built to practice developing backend APIs with **FastAPI**, database integration, CRUD operations, and clean project organization.
+- REST routing with path and query parameters
+- Request body validation with Pydantic, including a custom field validator (XML resume check)
+- Response shaping with `response_model`, keeping internal database columns out of API responses
+- Pagination with `limit`/`offset` and a deterministic `ORDER BY`
+- Multi-table joins, both in raw SQL and SQLAlchemy's Core `select()` syntax
+- Proper error handling: repositories return data/`None`/booleans, routers decide the HTTP response
+- A full migration from raw parameterized SQL to a SQLAlchemy ORM layer (models, `select`/`insert`/`update`/`delete`)
